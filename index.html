@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>TheEstherOseha | StorySpace — Comment Approval System</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Global Design System - Clean Interface - No Emojis */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg-body: #f4f7fc; --bg-card: #ffffff; --text-primary: #0f172a;
+      --text-secondary: #5b6e8c; --border-color: #e9edf2; --comment-bg: #f8fafc;
+      --input-bg: #ffffff; --header-bg: #ffffff; --sidebar-bg: #ffffff;
+      --panel-bg: linear-gradient(135deg, #ffffff 0%, #fef9e3 100%);
+      --btn-like-bg: #f1f5f9; --btn-like-hover: #e2e8f0; --shadow: 0 8px 20px rgba(0,0,0,0.03);
+      --pending-bg: #fef3c7; --pending-border: #f59e0b;
+    }
+    body.dark-mode {
+      --bg-body: #121826; --bg-card: #1e293b; --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8; --border-color: #334155; --comment-bg: #0f172a;
+      --input-bg: #334155; --header-bg: #1e293b; --sidebar-bg: #1e293b;
+      --panel-bg: linear-gradient(135deg, #1e293b 0%, #2d3a4b 100%);
+      --btn-like-bg: #334155; --btn-like-hover: #475569;
+      --pending-bg: #422c1a; --pending-border: #f59e0b;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-primary); line-height: 1.5; padding-bottom: 3rem; transition: background 0.3s ease; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .site-header { background: var(--header-bg); box-shadow: 0 2px 12px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; transition: background 0.3s ease; }
+    .navbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 1rem 0; gap: 1rem; }
+    .logo { font-size: 1.7rem; font-weight: 800; background: linear-gradient(135deg, #1e3a5f, #2c5a7a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .auth-area { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+    .theme-toggle { background: var(--btn-like-bg); border: none; padding: 8px 16px; border-radius: 40px; font-weight: 500; cursor: pointer; transition: 0.2s; font-family: inherit; font-size: 0.9rem; color: var(--text-primary); display: inline-flex; align-items: center; gap: 8px; }
+    .theme-toggle:hover { background: var(--btn-like-hover); transform: scale(0.98); }
+    .btn { border: none; background: #eef2ff; padding: 8px 20px; border-radius: 40px; font-weight: 500; cursor: pointer; transition: 0.2s; font-family: inherit; font-size: 0.9rem; }
+    .btn-primary { background: #1e4a6e; color: white; }
+    .btn-primary:hover { background: #0f3b56; transform: translateY(-1px); }
+    .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); }
+    .btn-outline:hover { background: var(--btn-like-bg); }
+    .owner-badge { background: #0f172a; color: #facc15; padding: 4px 14px; border-radius: 30px; font-size: 0.75rem; font-weight: 600; }
+    .user-badge { background: var(--btn-like-bg); color: var(--text-primary); padding: 4px 14px; border-radius: 30px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .user-badge:hover { background: var(--btn-like-hover); }
+    .content-wrapper { display: flex; gap: 2rem; margin: 2rem 0; flex-wrap: wrap; }
+    .blog-main { flex: 3; min-width: 260px; }
+    .contact-sidebar { flex: 1; min-width: 200px; background: var(--sidebar-bg); border-radius: 28px; padding: 1.5rem 1.2rem; height: fit-content; position: sticky; top: 100px; box-shadow: var(--shadow); border: 1px solid var(--border-color); text-align: center; }
+    .contact-sidebar h3 { font-size: 1.4rem; margin-bottom: 1.2rem; color: var(--text-primary); }
+    .social-icons { display: flex; justify-content: center; gap: 1.5rem; margin: 1rem 0; }
+    .social-circle { background: var(--btn-like-bg); width: 58px; height: 58px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 2rem; cursor: pointer; transition: all 0.2s ease; color: #1e4a6e; }
+    .social-circle:hover { transform: scale(1.08); background: #1e4a6e; color: white; }
+    .contact-note { font-size: 0.8rem; color: var(--text-secondary); margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem; }
+    .post-card { background: var(--bg-card); border-radius: 28px; padding: 1.8rem; box-shadow: var(--shadow); border: 1px solid var(--border-color); margin-bottom: 2rem; transition: background 0.3s ease; }
+    .post-title { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary); }
+    .post-meta { display: flex; gap: 1rem; color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; }
+    .post-content { color: var(--text-primary); margin: 1rem 0 1.2rem; line-height: 1.6; white-space: pre-wrap; }
+    .file-container { margin: 1rem 0; border-radius: 24px; overflow: hidden; background: var(--btn-like-bg); display: flex; justify-content: center; }
+    .post-file-img { max-width: 100%; max-height: 450px; object-fit: cover; border-radius: 24px; }
+    .post-file-video { max-width: 100%; max-height: 450px; border-radius: 24px; outline: none; }
+    .reaction-bar { display: flex; gap: 1.2rem; margin: 1rem 0 0.5rem; align-items: center; flex-wrap: wrap; }
+    .reaction-btn { background: var(--btn-like-bg); border: none; padding: 6px 16px; border-radius: 40px; font-size: 0.9rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; color: var(--text-primary); transition: 0.2s; }
+    .reaction-btn:hover { background: var(--btn-like-hover); }
+    .comment-section { margin-top: 1.4rem; background: var(--comment-bg); border-radius: 24px; padding: 1rem 1.2rem; transition: background 0.3s ease; }
+    .comment-list { max-height: 400px; overflow-y: auto; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 10px; }
+    .single-comment { background: var(--bg-card); padding: 10px 14px; border-radius: 20px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+    .single-comment.pending-comment { background: var(--pending-bg); border-left: 4px solid var(--pending-border); }
+    .comment-content { flex: 1; }
+    .comment-name { font-weight: 700; font-size: 0.8rem; color: var(--text-primary); }
+    .comment-text { font-size: 0.9rem; margin-top: 4px; color: var(--text-primary); word-break: break-word; }
+    .pending-badge { background: #f59e0b; color: white; font-size: 0.65rem; padding: 2px 8px; border-radius: 20px; margin-left: 8px; }
+    .comment-actions { display: flex; gap: 6px; align-items: center; }
+    .approve-btn, .reject-btn { border: none; border-radius: 20px; padding: 4px 10px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .approve-btn { background: #10b981; color: white; }
+    .approve-btn:hover { background: #059669; }
+    .reject-btn { background: #ef4444; color: white; }
+    .reject-btn:hover { background: #dc2626; }
+    .comment-form { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .comment-input { flex: 1; padding: 10px 14px; border-radius: 60px; border: 1px solid var(--border-color); font-family: inherit; outline: none; background: var(--input-bg); color: var(--text-primary); }
+    .creator-panel { background: var(--panel-bg); border-radius: 28px; padding: 1.8rem; margin-bottom: 2rem; border: 3px solid #f59e0b; box-shadow: 0 12px 30px rgba(245, 158, 11, 0.15); }
+    .creator-panel h3 { color: #b45309; margin-bottom: 1rem; font-size: 1.6rem; }
+    .upload-area-highlight { background: rgba(245, 158, 11, 0.15); border: 2px dashed #f59e0b; border-radius: 20px; padding: 1rem; margin: 1rem 0; }
+    .form-group { margin-bottom: 1rem; }
+    input, textarea { width: 100%; padding: 12px 16px; border-radius: 28px; border: 1px solid var(--border-color); font-family: inherit; font-size: 1rem; background: var(--input-bg); color: var(--text-primary); }
+    .pending-comments-header { background: var(--pending-bg); border-radius: 20px; padding: 12px 16px; margin-bottom: 1rem; border-left: 4px solid #f59e0b; }
+    .alert { padding: 12px 18px; border-radius: 40px; margin: 1rem 0; }
+    .alert-error { background: #fee2e2; color: #b91c1c; }
+    .alert-success { background: #e0f2e9; color: #0f5c3f; }
+    .alert-info { background: #dbeafe; color: #1e40af; }
+    footer { text-align: center; margin-top: 3rem; color: var(--text-secondary); font-size: 0.8rem; }
+    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1500; display: flex; align-items: center; justify-content: center; }
+    .modal-card { background: var(--bg-card); border-radius: 32px; max-width: 420px; width: 90%; padding: 2rem; box-shadow: 0 25px 40px rgba(0,0,0,0.2); }
+    .popup-toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1e4a6e; color: white; padding: 12px 24px; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 2000; animation: fadeInUp 0.3s ease; font-size: 0.9rem; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    @media (max-width: 780px) { .content-wrapper { flex-direction: column; } .contact-sidebar { position: static; } }
+  </style>
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <div class="navbar">
+      <div class="logo">TheEstherOseha</div>
+      <div class="auth-area" id="authArea"></div>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <div id="creatorZone"></div>
+  <div class="content-wrapper">
+    <div class="blog-main">
+      <div id="postsFeed"></div>
+    </div>
+    <aside class="contact-sidebar">
+      <h3>Connect</h3>
+      <div class="social-icons">
+        <div class="social-circle" data-social="instagram"><a href="https://www.instagram.com/yourfav_pharm"><i class="fab fa-instagram"></i></a></div>
+        <div class="social-circle" data-social="tiktok"><a href="https://www.tiktok.com/@thehadassahsjournal" target="_blank"><i class="fab fa-tiktok"></i></a></div>
+        <div class="social-circle" data-social="whatsapp"><a href="https://wa.me/08073677487" target="_blank"><i class="fab fa-whatsapp"></i></a></div>
+      </div>
+      <div class="contact-note">Follow for authentic stories and insights</div>
+    </aside>
+  </div>
+  <div id="globalMessage"></div>
+</main>
+<footer><p>TheEstherOseha | Sharing insightful stories and practical tips. All comments are moderated.</p></footer>
+
+<script>
+// ============================================================================
+// THE ESTHER OSEHA - COMMENT APPROVAL SYSTEM WITH FORGOT PASSWORD
+// Forgot Password Feature: Regular users can reset their password
+// ============================================================================
+
+// Define the IndexedDB database name for persistent local storage
+const DB_NAME = 'EstherStoryDB';
+// Database version - increment when structure changes to trigger upgrade
+const DB_VERSION = 14;
+// Define object store names (like tables in SQL databases)
+const STORES = { USERS: 'users', POSTS: 'posts', COMMENTS: 'comments', REACTIONS: 'reactions' };
+
+// Global variable to hold the database connection instance
+let db = null;
+// Global variable to hold the currently logged-in user object
+let currentUser = null;
+
+// ----------------------------------------------------------------------------
+// DATABASE INITIALIZATION AND SEEDING FUNCTIONS
+// ----------------------------------------------------------------------------
+
+// Function to open/initialize the IndexedDB database
+function initDatabase() {
+  // Return a Promise to handle asynchronous database operations
+  return new Promise((resolve, reject) => {
+    // Open a connection to the database with name and version
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    
+    // onupgradeneeded fires when database is created or version increases
+    request.onupgradeneeded = (event) => {
+      // Get reference to the database from the event
+      const database = event.target.result;
+      
+      // Create USERS store if it doesn't exist - stores user accounts
+      if (!database.objectStoreNames.contains(STORES.USERS)) {
+        // Create object store with auto-incrementing primary key 'id'
+        const userStore = database.createObjectStore(STORES.USERS, { keyPath: 'id', autoIncrement: true });
+        // Create a unique index on 'username' for fast lookups and uniqueness validation
+        userStore.createIndex('username', 'username', { unique: true });
+      }
+      
+      // Create POSTS store if it doesn't exist - stores blog posts
+      if (!database.objectStoreNames.contains(STORES.POSTS)) {
+        database.createObjectStore(STORES.POSTS, { keyPath: 'id', autoIncrement: true });
+      }
+      
+      // Create COMMENTS store if it doesn't exist - stores comments with status field
+      if (!database.objectStoreNames.contains(STORES.COMMENTS)) {
+        const commentStore = database.createObjectStore(STORES.COMMENTS, { keyPath: 'id', autoIncrement: true });
+        // Create index on postId for efficient querying of comments by post
+        commentStore.createIndex('postId', 'postId');
+        // Create index on status for filtering pending vs approved comments
+        commentStore.createIndex('status', 'status');
+      }
+      
+      // Create REACTIONS store if it doesn't exist - stores likes on posts
+      if (!database.objectStoreNames.contains(STORES.REACTIONS)) {
+        database.createObjectStore(STORES.REACTIONS, { keyPath: 'id', autoIncrement: true });
+      }
+    };
+    
+    // onsuccess fires when database connection is successfully opened
+    request.onsuccess = (event) => {
+      // Store the database connection in the global variable
+      db = event.target.result;
+      // Seed initial data (owner account and sample post) then resolve the Promise
+      seedInitial().then(() => resolve());
+    };
+    
+    // onerror fires if there's an error opening the database
+    request.onerror = (event) => reject(event.target.error);
+  });
+}
+
+// Function to populate database with initial data if it's empty
+async function seedInitial() {
+  // Get all existing users from the USERS store
+  const users = await getAllFromStore(STORES.USERS);
+  // Only seed if no users exist (fresh database)
+  if (users.length === 0) {
+    // Create the owner account (esther) with the specified password
+    await addToStore(STORES.USERS, { username: 'esther', password: 'estheroseha1996', role: 'owner', createdAt: new Date().toISOString() });
+    // Create a sample reader account for testing purposes
+    await addToStore(STORES.USERS, { username: 'reader', password: 'reader123', role: 'reader', createdAt: new Date().toISOString() });
+    // Create a welcome post with an image attachment - CORRECTED TITLE
+    const postId = await addToStore(STORES.POSTS, {
+      title: 'Welcome to TheEstherOseha Space',
+      content: 'Welcome to my lifestyle blog! All comments require my approval before they appear publicly. This helps maintain a positive and respectful community.',
+      author: 'esther',
+      createdAt: new Date().toISOString(),
+      fileType: 'image',
+      fileData: 'https://picsum.photos/id/104/800/450'
+    });
+    // Add an approved comment as example (already approved by admin)
+    await addToStore(STORES.COMMENTS, { 
+      postId, username: 'esther', text: 'Welcome everyone! Your comments will be visible after I approve them. Thank you for understanding!', 
+      createdAt: new Date().toISOString(), status: 'approved' 
+    });
+  }
+}
+
+// Generic function to add an item to any object store
+function addToStore(storeName, data) {
+  // Return a Promise for async/await compatibility
+  return new Promise((resolve, reject) => {
+    // Start a read-write transaction on the specified store
+    const transaction = db.transaction([storeName], 'readwrite');
+    // Get the object store reference
+    const store = transaction.objectStore(storeName);
+    // Add the data and get the request object
+    const request = store.add(data);
+    // Resolve with the new item's ID on success
+    request.onsuccess = () => resolve(request.result);
+    // Reject with error on failure
+    request.onerror = () => reject(request.error);
+  });
+}
+
+// Generic function to get all items from an object store
+function getAllFromStore(storeName) {
+  // Return a Promise for async/await compatibility
+  return new Promise((resolve, reject) => {
+    // Read-only transaction for better performance
+    const transaction = db.transaction([storeName], 'readonly');
+    // Get the object store reference
+    const store = transaction.objectStore(storeName);
+    // Get all records from the store
+    const request = store.getAll();
+    // Resolve with the array of results (empty array if none)
+    request.onsuccess = () => resolve(request.result || []);
+    // Reject with error on failure
+    request.onerror = () => reject(request.error);
+  });
+}
+
+// Generic function to update an existing item in an object store
+function updateInStore(storeName, data) {
+  // Return a Promise for async/await compatibility
+  return new Promise((resolve, reject) => {
+    // Start a read-write transaction
+    const transaction = db.transaction([storeName], 'readwrite');
+    // Get the object store reference
+    const store = transaction.objectStore(storeName);
+    // Put (update) the data - uses the keyPath to identify existing record
+    const request = store.put(data);
+    // Resolve with the result on success
+    request.onsuccess = () => resolve(request.result);
+    // Reject with error on failure
+    request.onerror = () => reject(request.error);
+  });
+}
+
+// Generic function to delete an item by ID from any store
+function deleteFromStore(storeName, id) {
+  // Return a Promise for async/await compatibility
+  return new Promise((resolve, reject) => {
+    // Start a read-write transaction
+    const transaction = db.transaction([storeName], 'readwrite');
+    // Get the object store reference
+    const store = transaction.objectStore(storeName);
+    // Delete the record with the specified ID
+    const request = store.delete(id);
+    // Resolve when deletion is complete
+    request.onsuccess = () => resolve();
+    // Reject with error on failure
+    request.onerror = () => reject(request.error);
+  });
+}
+
+// ----------------------------------------------------------------------------
+// AUTHENTICATION AND USER MANAGEMENT FUNCTIONS
+// ----------------------------------------------------------------------------
+
+// Login function - validates username and password against stored users
+async function login(username, password) {
+  // Get all users from the database
+  const users = await getAllFromStore(STORES.USERS);
+  // Find user with matching username and password
+  const user = users.find(u => u.username === username && u.password === password);
+  // Return error if no matching user found
+  if (!user) return { success: false, msg: 'Invalid username or password' };
+  // Store current user in memory for the session
+  currentUser = { id: user.id, username: user.username, role: user.role };
+  // Persist session in browser storage so it survives page reload
+  sessionStorage.setItem('story_session', JSON.stringify(currentUser));
+  // Return success
+  return { success: true };
+}
+
+// Register function - creates a new reader account
+async function register(username, password) {
+  // Get all existing users to check for duplicates
+  const users = await getAllFromStore(STORES.USERS);
+  // Check if username already exists
+  if (users.find(u => u.username === username)) return { success: false, msg: 'Username already exists' };
+  // Validate password length
+  if (password.length < 4) return { success: false, msg: 'Password must be at least 4 characters' };
+  // Create new user with 'reader' role
+  await addToStore(STORES.USERS, { username, password, role: 'reader', createdAt: new Date().toISOString() });
+  // Return success
+  return { success: true };
+}
+
+// Logout function - clears current user and session storage
+function logout() { 
+  // Clear the in-memory user object
+  currentUser = null; 
+  // Remove the session from browser storage
+  sessionStorage.removeItem('story_session'); 
+  // Refresh the entire UI to show logged-out state
+  renderUI(); 
+}
+
+// Helper function to check if the current user is the blog owner (admin)
+function isOwner() { 
+  // Return true if user exists and has role 'owner'
+  return currentUser && currentUser.role === 'owner'; 
+}
+
+// Load user session from browser storage on page reload
+async function loadSession() {
+  // Get the saved session from sessionStorage
+  const saved = sessionStorage.getItem('story_session');
+  // Only proceed if a session exists
+  if (saved) {
+    try {
+      // Parse the JSON string back into an object
+      const user = JSON.parse(saved);
+      // Verify the user still exists in the database (prevent tampering)
+      const users = await getAllFromStore(STORES.USERS);
+      // If user is valid, restore the currentUser
+      if (users.find(u => u.id === user.id)) currentUser = user;
+    } catch(e) { 
+      // If any error occurs during parsing, clear the session
+      currentUser = null; 
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// FORGOT PASSWORD FUNCTION - SECURE PASSWORD RESET
+// ----------------------------------------------------------------------------
+
+// Forgot password function - allows regular users to reset their password
+// IMPORTANT: Admin account 'esther' cannot reset password via this method
+async function forgotPassword(username, newPassword) {
+  // Validate new password length
+  if (newPassword.length < 4) {
+    throw new Error('Password must be at least 4 characters');
+  }
+  
+  // SECURITY CHECK: Block the admin account 'esther' from password reset
+  // This prevents unauthorized password changes on the owner account
+  if (username.toLowerCase() === 'esther') {
+    throw new Error('Password with this username cannot be changed');
+  }
+  
+  // Find the user in the database by username
+  const users = await getAllFromStore(STORES.USERS);
+  const user = users.find(u => u.username === username);
+  
+  // Check if user exists
+  if (!user) {
+    throw new Error('Username not found');
+  }
+  
+  // Additional security: Also block any user with role 'owner' from resetting password
+  // This is an extra layer of protection for the admin account
+  if (user.role === 'owner') {
+    throw new Error('Owner account password cannot be reset using forgot password feature.');
+  }
+  
+  // Update the user's password
+  user.password = newPassword;
+  await updateInStore(STORES.USERS, user);
+  
+  // Return success message
+  return true;
+}
+
+// ----------------------------------------------------------------------------
+// POST MANAGEMENT FUNCTIONS
+// ----------------------------------------------------------------------------
+
+// Create a new blog post (owner only)
+async function createPost(title, content, fileType, fileData) {
+  // Only the owner can publish new stories
+  if (!isOwner()) throw new Error('Only TheEstherOseha can publish stories');
+  // Validate that title and content are not empty
+  if (!title.trim() || !content.trim()) throw new Error('Title and content are required');
+  // Add the new post to the database
+  return await addToStore(STORES.POSTS, {
+    title, content, author: currentUser.username, createdAt: new Date().toISOString(), fileType, fileData
+  });
+}
+
+// Delete a post and all associated comments and reactions
+async function deletePost(postId) {
+  // Only the owner can delete posts
+  if (!isOwner()) throw new Error('Unauthorized');
+  // Delete the post itself
+  await deleteFromStore(STORES.POSTS, postId);
+  // Get all comments from the database
+  const allComments = await getAllFromStore(STORES.COMMENTS);
+  // Delete all comments that belong to this post
+  for (const c of allComments.filter(c => c.postId === postId)) await deleteFromStore(STORES.COMMENTS, c.id);
+  // Get all reactions from the database
+  const allReactions = await getAllFromStore(STORES.REACTIONS);
+  // Delete all reactions that belong to this post
+  for (const r of allReactions.filter(r => r.postId === postId)) await deleteFromStore(STORES.REACTIONS, r.id);
+  // Refresh the UI to reflect changes
+  renderUI();
+}
+
+// Get all posts sorted by creation date (newest first)
+async function getAllPosts() {
+  // Get all posts from the database
+  const posts = await getAllFromStore(STORES.POSTS);
+  // Sort by createdAt date, newest first (descending order)
+  return posts.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+}
+
+// ----------------------------------------------------------------------------
+// COMMENT MANAGEMENT WITH APPROVAL SYSTEM
+// ----------------------------------------------------------------------------
+
+// Add a comment with status 'pending' - requires admin approval before becoming visible
+async function addComment(postId, text) {
+  // User must be logged in to comment
+  if (!currentUser) throw new Error('Please login to comment');
+  // Comment text cannot be empty
+  if (!text.trim()) throw new Error('Comment cannot be empty');
+  // Add comment to database with status 'pending' (not visible to other users yet)
+  await addToStore(STORES.COMMENTS, { 
+    postId, 
+    username: currentUser.username, 
+    text: text.trim(), 
+    createdAt: new Date().toISOString(),
+    status: 'pending'  // All new comments start as pending, awaiting admin approval
+  });
+  // Refresh the UI to show the pending comment (admin can see it, users see nothing yet)
+  renderUI();
+  // Show a popup notification to inform the user that their comment awaits approval
+  showPopupToast('Your comment has been submitted and awaits admin approval.');
+}
+
+// Admin approves a comment - changes status from pending to approved
+async function approveComment(commentId) {
+  // Only the owner can approve comments
+  if (!isOwner()) throw new Error('Only the owner can approve comments');
+  // Get all comments from the database
+  const allComments = await getAllFromStore(STORES.COMMENTS);
+  // Find the specific comment by ID
+  const comment = allComments.find(c => c.id === commentId);
+  // Throw error if comment not found
+  if (!comment) throw new Error('Comment not found');
+  // Change the status from 'pending' to 'approved'
+  comment.status = 'approved';
+  // Update the comment in the database
+  await updateInStore(STORES.COMMENTS, comment);
+  // Refresh the UI to show the newly approved comment
+  renderUI();
+  // Show success message
+  showPopupToast('Comment approved and now visible to everyone.');
+}
+
+// Admin rejects/deletes a comment (pending comments can be rejected)
+async function rejectComment(commentId) {
+  // Only the owner can reject comments
+  if (!isOwner()) throw new Error('Only the owner can reject comments');
+  // Delete the comment from the database entirely
+  await deleteFromStore(STORES.COMMENTS, commentId);
+  // Refresh the UI
+  renderUI();
+  // Show confirmation message
+  showPopupToast('Comment rejected and removed.');
+}
+
+// Get comments for a post - filters based on user role
+// Admin sees all comments (both pending and approved)
+// Regular users only see approved comments
+async function getCommentsForPost(postId) {
+  // Get all comments from the database
+  const allComments = await getAllFromStore(STORES.COMMENTS);
+  // Filter comments that belong to this post
+  const postComments = allComments.filter(c => c.postId === postId);
+  
+  // If user is the owner (admin), show all comments including pending ones
+  if (isOwner()) {
+    // Sort by creation date (oldest first for chronological display)
+    return postComments.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+  } else {
+    // Regular users only see comments that have been approved
+    const approvedComments = postComments.filter(c => c.status === 'approved');
+    // Sort by creation date (oldest first)
+    return approvedComments.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+  }
+}
+
+// Count pending comments for admin dashboard display
+async function getPendingCommentsCount() {
+  // Only admin needs this count
+  if (!isOwner()) return 0;
+  // Get all comments from the database
+  const allComments = await getAllFromStore(STORES.COMMENTS);
+  // Return the count of comments with status 'pending'
+  return allComments.filter(c => c.status === 'pending').length;
+}
+
+// ----------------------------------------------------------------------------
+// LIKE / REACTION MANAGEMENT FUNCTIONS
+// ----------------------------------------------------------------------------
+
+// Toggle like status on a post (add like if not liked, remove if already liked)
+async function toggleLike(postId) {
+  // User must be logged in to like posts
+  if (!currentUser) throw new Error('Login to like posts');
+  // Get all reactions from the database
+  const all = await getAllFromStore(STORES.REACTIONS);
+  // Check if user already liked this post
+  const existing = all.find(r => r.postId === postId && r.username === currentUser.username);
+  // If already liked, remove the like (unlike)
+  if (existing) await deleteFromStore(STORES.REACTIONS, existing.id);
+  // Otherwise, add a new like
+  else await addToStore(STORES.REACTIONS, { postId, username: currentUser.username, type: 'like', createdAt: new Date().toISOString() });
+  // Refresh the UI to update the like count display
+  renderUI();
+}
+
+// Get the total like count for a specific post
+async function getLikeCount(postId) {
+  // Get all reactions from the database
+  const all = await getAllFromStore(STORES.REACTIONS);
+  // Filter reactions that belong to this post and count them
+  return all.filter(r => r.postId === postId).length;
+}
+
+// ----------------------------------------------------------------------------
+// UI RENDERING AND MODAL FUNCTIONS
+// ----------------------------------------------------------------------------
+
+// Display a popup toast notification (slides up from bottom)
+function showPopupToast(message) {
+  // Create a div element for the toast
+  const toast = document.createElement('div');
+  // Add class for styling
+  toast.className = 'popup-toast';
+  // Set the message text
+  toast.textContent = message;
+  // Add the toast to the document body
+  document.body.appendChild(toast);
+  // Remove the toast after 3 seconds
+  setTimeout(() => {
+    toast.remove();
+  }, 3000);
+}
+
+// Display a temporary global message (success or error) in the message area
+function showGlobalMsg(msg, type) {
+  // Get the message container div
+  const div = document.getElementById('globalMessage');
+  // Set the inner HTML with appropriate alert styling
+  div.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  // Automatically clear the message after 4 seconds
+  setTimeout(() => div.innerHTML = '', 4000);
+}
+
+// Escape HTML special characters to prevent XSS (cross-site scripting) attacks
+function escapeHtml(str) { 
+  // Return empty string if input is falsy
+  if(!str) return ''; 
+  // Replace special characters with their HTML entity equivalents
+  return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); 
+}
+
+// Show popup for social media links when user clicks on social icons
+function showSocialPopup(platform) {
+  // Determine the message based on which platform was clicked
+  let msg = platform === 'instagram' ? 'Instagram: @yourfav_pharm' : (platform === 'tiktok' ? 'TikTok: @thehadassahsjournal' : 'WhatsApp: 08073677487');
+  // Create a modal overlay div
+  const popup = document.createElement('div'); 
+  // Style the overlay to cover the entire screen
+  popup.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:2000;display:flex;align-items:center;justify-content:center;';
+  // Set the inner HTML with the social info and a close button
+  popup.innerHTML = `<div style="background:var(--bg-card);border-radius:48px;max-width:360px;width:90%;padding:2rem;text-align:center;"><i class="fab fa-${platform}" style="font-size:3rem;"></i><h3>${platform.toUpperCase()}</h3><p>${msg}</p><button class="btn btn-primary" id="closePopupBtn">Got it</button></div>`;
+  // Add the popup to the document body
+  document.body.appendChild(popup);
+  // Add click handler to close button
+  document.getElementById('closePopupBtn')?.addEventListener('click', () => popup.remove());
+}
+
+// Show modal dialog for changing password (logged-in users only)
+function showChangePasswordModal() {
+  // Create modal overlay div
+  const modal = document.createElement('div'); modal.className = 'modal';
+  // Set modal content with password input fields
+  modal.innerHTML = `<div class="modal-card"><h3>Change Password</h3><div id="pwdMsg"></div>
+    <input type="password" id="oldPass" placeholder="Current password" style="margin-bottom:12px;">
+    <input type="password" id="newPass" placeholder="New password (min 4 characters)">
+    <div style="display:flex; gap:12px; margin-top:20px;"><button class="btn btn-outline" id="cancelPwdBtn">Cancel</button><button class="btn btn-primary" id="confirmPwdBtn">Update Password</button></div></div>`;
+  // Add modal to body
+  document.body.appendChild(modal);
+  // Cancel button removes the modal
+  const cancel = () => modal.remove();
+  document.getElementById('cancelPwdBtn')?.addEventListener('click', cancel);
+  // Confirm button handles password update
+  document.getElementById('confirmPwdBtn')?.addEventListener('click', async () => {
+    const oldPass = document.getElementById('oldPass').value;
+    const newPass = document.getElementById('newPass').value;
+    const msgDiv = document.getElementById('pwdMsg');
+    try {
+      // Validate user is logged in
+      if (!currentUser) throw new Error('Not logged in');
+      // Get all users and find current user
+      const users = await getAllFromStore(STORES.USERS);
+      const user = users.find(u => u.id === currentUser.id);
+      // Verify old password matches
+      if (!user || user.password !== oldPass) throw new Error('Current password is incorrect');
+      // Validate new password length
+      if (newPass.length < 4) throw new Error('Password must be at least 4 characters');
+      // Update the password
+      user.password = newPass;
+      await updateInStore(STORES.USERS, user);
+      // Show success and logout after delay
+      msgDiv.innerHTML = '<div class="alert alert-success">Password updated. Please login again.</div>';
+      setTimeout(() => { logout(); modal.remove(); showGlobalMsg('Password changed. Please login again.', 'success'); }, 1500);
+    } catch(e) { 
+      // Show error message if something goes wrong
+      msgDiv.innerHTML = `<div class="alert alert-error">${e.message}</div>`; 
+    }
+  });
+}
+
+// Show Forgot Password Modal - allows users to reset their forgotten password
+function showForgotPasswordModal() {
+  // Create modal overlay div
+  const modal = document.createElement('div'); modal.className = 'modal';
+  // Set modal content with username and new password fields
+  modal.innerHTML = `<div class="modal-card"><h3>Reset Forgotten Password</h3>
+    <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:12px;">Enter your username and new password. Note: The owner account cannot reset password via this form.</p>
+    <div id="forgotMsg"></div>
+    <input type="text" id="forgotUsername" placeholder="Username" style="margin-bottom:12px;">
+    <input type="password" id="forgotNewPass" placeholder="New password (min 4 characters)">
+    <div style="display:flex; gap:12px; margin-top:20px;"><button class="btn btn-outline" id="cancelForgotBtn">Cancel</button><button class="btn btn-primary" id="submitForgotBtn">Reset Password</button></div></div>`;
+  // Add modal to body
+  document.body.appendChild(modal);
+  // Cancel button removes the modal
+  document.getElementById('cancelForgotBtn')?.addEventListener('click', () => modal.remove());
+  // Submit button handles password reset
+  document.getElementById('submitForgotBtn')?.addEventListener('click', async () => {
+    const username = document.getElementById('forgotUsername').value.trim();
+    const newPassword = document.getElementById('forgotNewPass').value;
+    const msgDiv = document.getElementById('forgotMsg');
+    try {
+      // Call the forgotPassword function which blocks 'esther' account
+      await forgotPassword(username, newPassword);
+      msgDiv.innerHTML = '<div class="alert alert-success">Password reset successful! You can now login with your new password.</div>';
+      // Close modal after 2 seconds on success
+      setTimeout(() => { modal.remove(); }, 2000);
+    } catch(e) {
+      // Display error message (including the error for 'esther' account)
+      msgDiv.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    }
+  });
+}
+
+// Show authentication modal for login or registration
+function showAuthModal(mode) {
+  // Create modal overlay div
+  const modalDiv = document.createElement('div'); modalDiv.className = 'modal';
+  // Set modal content based on mode (login or register)
+  modalDiv.innerHTML = `<div class="modal-card"><h3>${mode === 'login' ? 'Sign In' : 'Create Account'}</h3><div id="authMsg"></div><input type="text" id="modalUser" placeholder="Username"><input type="password" id="modalPass" placeholder="Password" style="margin-top:12px;"><div style="margin-top:20px;display:flex;gap:12px;"><button class="btn btn-outline" id="closeModal">Cancel</button><button class="btn btn-primary" id="submitAuth">${mode === 'login' ? 'Login' : 'Register'}</button></div></div>`;
+  // Add modal to body
+  document.body.appendChild(modalDiv);
+  // Cancel button removes the modal
+  document.getElementById('closeModal')?.addEventListener('click', () => modalDiv.remove());
+  // Submit button handles authentication
+  document.getElementById('submitAuth')?.addEventListener('click', async () => {
+    const user = document.getElementById('modalUser').value.trim();
+    const pass = document.getElementById('modalPass').value;
+    const msgDiv = document.getElementById('authMsg');
+    if (mode === 'login') {
+      // Handle login
+      const res = await login(user, pass);
+      if (res.success) { modalDiv.remove(); renderUI(); showGlobalMsg(`Welcome ${user}`, 'success'); }
+      else msgDiv.innerHTML = `<div class="alert alert-error">${res.msg}</div>`;
+    } else {
+      // Handle registration
+      const res = await register(user, pass);
+      if (res.success) { await login(user, pass); modalDiv.remove(); renderUI(); showGlobalMsg('Registration successful', 'success'); }
+      else msgDiv.innerHTML = `<div class="alert alert-error">${res.msg}</div>`;
+    }
+  });
+}
+
+// Main UI rendering function - updates the entire page based on current state
+async function renderUI() {
+  // Fetch all posts from database
+  const posts = await getAllPosts();
+  // Get DOM element references
+  const authArea = document.getElementById('authArea');
+  const creatorZoneDiv = document.getElementById('creatorZone');
+  const postsFeed = document.getElementById('postsFeed');
+  // Get count of pending comments for admin display
+  const pendingCount = await getPendingCommentsCount();
+  
+  // Render authentication area based on login state
+  if (!currentUser) {
+    // Show login, register, and forgot password buttons for non-logged-in users
+    authArea.innerHTML = `<button class="theme-toggle" id="globalThemeToggle"><i class="fas fa-moon"></i> Dark Mode</button>
+      <button class="btn btn-outline" id="showLoginBtn">Login</button>
+      <button class="btn btn-outline" id="showRegisterBtn">Register</button>
+      <button class="btn btn-outline" id="showForgotBtn">Forgot Password</button>`;
+    // Attach event listeners to the buttons
+    document.getElementById('showLoginBtn')?.addEventListener('click', () => showAuthModal('login'));
+    document.getElementById('showRegisterBtn')?.addEventListener('click', () => showAuthModal('register'));
+    document.getElementById('showForgotBtn')?.addEventListener('click', () => showForgotPasswordModal());
+  } else {
+    // Show user info, account menu, and logout button for logged-in users
+    authArea.innerHTML = `<button class="theme-toggle" id="globalThemeToggle"><i class="fas fa-moon"></i> Dark Mode</button>
+      <span class="user-badge" id="accountMenuBtn"><i class="fas fa-user-cog"></i> ${currentUser.username} (${currentUser.role})</span>
+      <button class="btn" id="logoutBtn">Logout</button>`;
+    // Attach event listeners
+    document.getElementById('logoutBtn')?.addEventListener('click', logout);
+    document.getElementById('accountMenuBtn')?.addEventListener('click', () => showChangePasswordModal());
+  }
+  
+  // Theme toggle functionality with localStorage persistence
+  const themeBtn = document.getElementById('globalThemeToggle');
+  if (themeBtn) themeBtn.addEventListener('click', () => { 
+    // Toggle dark mode class on body
+    document.body.classList.toggle('dark-mode'); 
+    // Save preference to localStorage
+    localStorage.setItem('blog_theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light'); 
+  });
+  
+  // Render creator panel (only visible to owner/admin)
+  if (isOwner()) {
+    // Admin panel HTML with post creation form and pending comments count
+    creatorZoneDiv.innerHTML = `<div class="creator-panel"><h3>TheEstherOseha Creation Space</h3><div id="creatorFormMsg"></div>
+      <div class="form-group"><input type="text" id="postTitle" placeholder="Story title"></div>
+      <div class="form-group"><textarea id="postContent" rows="4" placeholder="Write your story content..."></textarea></div>
+      <div class="upload-area-highlight"><input type="file" id="fileUpload" accept="image/jpeg,image/png,image/gif,video/mp4,video/webm"><div id="filePreview"></div></div>
+      <button class="btn btn-primary" id="publishPostBtn">Publish Story</button>
+      ${pendingCount > 0 ? `<div class="pending-comments-header" style="margin-top:1rem;"><i class="fas fa-clock"></i> ${pendingCount} comment(s) pending approval. Review them below.</div>` : ''}</div>`;
+    // Variables to store uploaded file data
+    let fileType = null, fileData = null;
+    // Handle file upload and preview
+    document.getElementById('fileUpload')?.addEventListener('change', (e) => {
+      const f = e.target.files[0]; if(!f) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => { 
+        fileData = ev.target.result; 
+        fileType = f.type.startsWith('image') ? 'image' : 'video'; 
+        document.getElementById('filePreview').innerHTML = fileType === 'image' ? `<img src="${fileData}" class="preview-img">` : `<video src="${fileData}" class="preview-video" controls></video>`; 
+      };
+      reader.readAsDataURL(f);
+    });
+    // Publish button handler
+    document.getElementById('publishPostBtn')?.addEventListener('click', async () => {
+      const title = document.getElementById('postTitle').value;
+      const content = document.getElementById('postContent').value;
+      try { 
+        await createPost(title, content, fileType, fileData); 
+        renderUI(); 
+        showGlobalMsg('Story published successfully', 'success'); 
+      } catch(e) { 
+        showGlobalMsg(e.message, 'error'); 
+      }
+    });
+  } else {
+    // For regular users, creatorZoneDiv is empty (removed the light blue info block)
+    creatorZoneDiv.innerHTML = '';
+  }
+  
+  // Render all blog posts
+  if (posts.length === 0) { postsFeed.innerHTML = '<div class="alert">No stories yet.</div>'; return; }
+  postsFeed.innerHTML = '';
+  // Loop through each post and render it
+  for (const post of posts) {
+    // Get like count and comments for this post
+    const likeCount = await getLikeCount(post.id);
+    const comments = await getCommentsForPost(post.id);
+    // Generate HTML for file attachment if present
+    let fileHtml = post.fileData ? (post.fileType === 'image' ? `<div class="file-container"><img src="${post.fileData}" class="post-file-img" alt="story visual"></div>` : `<div class="file-container"><video src="${post.fileData}" class="post-file-video" controls></video></div>`) : '';
+    
+    // Generate HTML for comments with approve/reject buttons for admin
+    const commentsHtml = comments.map(comment => {
+      const isPending = comment.status === 'pending';
+      return `<div class="single-comment ${isPending ? 'pending-comment' : ''}" data-comment-id="${comment.id}">
+        <div class="comment-content">
+          <div class="comment-name">
+            <strong>${escapeHtml(comment.username)}</strong>
+            <span style="font-size:0.7rem; color:var(--text-secondary);">${new Date(comment.createdAt).toLocaleString()}</span>
+            ${isPending ? '<span class="pending-badge">Pending Approval</span>' : ''}
+          </div>
+          <div class="comment-text">${escapeHtml(comment.text)}</div>
+        </div>
+        <div class="comment-actions">
+          ${isOwner() && isPending ? `<button class="approve-btn" data-comment-id="${comment.id}"><i class="fas fa-check"></i> Approve</button>
+          <button class="reject-btn" data-comment-id="${comment.id}"><i class="fas fa-times"></i> Reject</button>` : ''}
+          ${isOwner() && !isPending ? `<button class="reject-btn" data-comment-id="${comment.id}" style="background:#6b7280;"><i class="fas fa-trash"></i> Delete</button>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+    
+    // Create the post card element
+    const card = document.createElement('div'); card.className = 'post-card';
+    card.innerHTML = `<div class="post-title">${escapeHtml(post.title)}</div><div class="post-meta"><span>${escapeHtml(post.author)}</span><span>${new Date(post.createdAt).toLocaleDateString()}</span></div>${fileHtml}<div class="post-content">${escapeHtml(post.content)}</div><div class="reaction-bar"><button class="reaction-btn like-btn" data-postid="${post.id}"><i class="fas fa-thumbs-up"></i> <span>${likeCount}</span> Like</button>${isOwner() ? `<button class="reaction-btn delete-btn" data-postid="${post.id}" style="background:#fee2e2; color:#b91c1c;">Delete Story</button>` : ''}</div><div class="comment-section"><div class="comment-list">${commentsHtml || '<div>No approved comments yet. Be the first to leave a comment!</div>'}</div>${currentUser ? `<div class="comment-form"><input type="text" id="comment-${post.id}" placeholder="Write a comment..." class="comment-input"><button class="btn btn-primary comment-submit" data-postid="${post.id}">Post Comment</button></div>` : '<small>Login to leave a comment</small>'}</div>`;
+    postsFeed.appendChild(card);
+    
+    // Attach event listeners for like button
+    card.querySelector('.like-btn')?.addEventListener('click', () => toggleLike(post.id));
+    // Attach event listener for delete post button (admin only)
+    card.querySelector('.delete-btn')?.addEventListener('click', () => { if(confirm('Delete this story permanently?')) deletePost(post.id); });
+    // Attach event listener for comment submission
+    card.querySelector('.comment-submit')?.addEventListener('click', async () => { 
+      const inp = document.getElementById(`comment-${post.id}`); 
+      try { 
+        await addComment(post.id, inp.value); 
+        inp.value = ''; 
+      } catch(e) { 
+        showGlobalMsg(e.message, 'error'); 
+      } 
+    });
+    // Attach event listeners for approve and reject buttons (admin only)
+    card.querySelectorAll('.approve-btn').forEach(btn => btn.addEventListener('click', async () => { await approveComment(Number(btn.dataset.commentId)); }));
+    card.querySelectorAll('.reject-btn').forEach(btn => btn.addEventListener('click', async () => { if(confirm('Delete this comment?')) await rejectComment(Number(btn.dataset.commentId)); }));
+  }
+}
+
+// ----------------------------------------------------------------------------
+// APPLICATION BOOTSTRAP - INITIALIZE EVERYTHING AND START THE APP
+// ----------------------------------------------------------------------------
+
+// Load saved theme preference from localStorage
+const savedTheme = localStorage.getItem('blog_theme');
+if (savedTheme === 'dark') document.body.classList.add('dark-mode');
+
+// Immediately-invoked async function to bootstrap the application
+(async function() { 
+  // Initialize IndexedDB and wait for completion
+  await initDatabase(); 
+  // Restore user session if exists
+  await loadSession(); 
+  // Render the entire user interface
+  await renderUI(); 
+  // Attach social media popup handlers to social circle elements 
+})();
+</script>
+</body>
+</html>
